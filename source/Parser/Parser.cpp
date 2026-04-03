@@ -104,10 +104,21 @@ void ConfigParser::setRules(const nlohmann::json& rules_)
             RuleType rule_t = converter.at(rule.at("type"));
             std::string reg = rule.at("rule");
 
-            if(rule.contains("true"))
+            if(rule_t == RuleType::BOOL)
             {
-                std::string true_repr = rule.at("true");
-                std::string false_repr = rule.at("false");
+                std::string true_repr;
+                std::string false_repr;
+                try
+                {
+                    true_repr = rule.at("true");
+                    false_repr = rule.at("false");
+                }
+                catch(const nlohmann::json::exception& e)
+                {
+                    if(callback) callback(std::string("Error parsing the 'rules' section in JSON: ") + e.what()); 
+                    has_warnings = true;
+                    continue;
+                }
 
                 rules.emplace(name, Rule{name, rule_t, reg, true_repr, false_repr});
             }
