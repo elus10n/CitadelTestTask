@@ -4,7 +4,7 @@ project(LogParserProject)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 1. Подключаем GTest через интернет
+# --- 1. Подключение GTest ---
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -13,28 +13,36 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# 2. Описываем нашу библиотеку парсера
-# Указываем пути относительно корня, где лежит CMakeLists.txt
-add_library(parser_lib 
+# --- 2. Создание общей библиотеки логики ---
+# Добавляем и парсер, и воркер в одну библиотеку для удобства линковки
+add_library(core_lib 
     source/parser/parser.cpp 
-    source/parser/parser.h
+    source/worker/worker.cpp
 )
 
-# Указываем, где искать хедеры (включая nlohmann)
-target_include_directories(parser_lib PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/parser
+# Указываем пути к хедерам. 
+# Интерфейсные пути (PUBLIC) позволят тестам автоматически "видеть" эти папки.
+target_include_directories(core_lib PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/parser
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/worker
 )
 
-# 3. Создаем исполняемый файл для тестов
-add_executable(run_tests test/parserTest.cpp)
+# Потоки нужны для std::async и std::future в Worker
+find_package(Threads REQUIRED)
+target_link_libraries(core_lib PUBLIC Threads::Threads)
 
-# Линкуем всё вместе
-target_link_libraries(run_tests PRIVATE 
-    parser_lib 
-    gtest_main
-)
+# --- 3. Тесты ---
 
-# Интеграция с тестами IDE
+# Тесты для парсера
+add_executable(parser_tests test/parserTest.cpp)
+target_link_libraries(parser_tests PRIVATE core_lib gtest_main)
+
+# Тесты для воркера
+add_executable(worker_tests test/workerTest.cpp)
+target_link_libraries(worker_tests PRIVATE core_lib gtest_main)
+
+# Интеграция с GoogleTest (позволяет запускать тесты через интерфейс IDE)
 include(GoogleTest)
-gtest_discover_tests(run_tests)
+gtest_discover_tests(parser_tests)
+gtest_discover_tests(worker_tests)
