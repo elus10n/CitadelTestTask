@@ -2,9 +2,9 @@
 
 std::string trim(const std::string& d_str) 
 {
-    int first = d_str.find_first_not_of(" \r\n\t");
+    size_t first = d_str.find_first_not_of(" \r\n\t");
     if (std::string::npos == first) return "";
-    int last = d_str.find_last_not_of(" \r\n\t");
+    size_t last = d_str.find_last_not_of(" \r\n\t");
     return d_str.substr(first, (last - first + 1));
 }
 
@@ -55,7 +55,7 @@ WorkerOutput Worker::processSingle(const std::string& filePath)
     std::string line;
     while(std::getline(stream, line))
     {
-        if(line.empty()) continue;
+        if(line.empty() || line.find("//") == 0) continue;//пропускаем пустые строки и строки с комменатриями, чтобы не нагружать логгер
 
         bool sensor_found = false;
         for (const auto& s : sensors) 
@@ -69,10 +69,10 @@ WorkerOutput Worker::processSingle(const std::string& filePath)
         }
         if (sensor_found) continue;
 
+        bool matched_any = false;
         if (context) 
         {
             const auto& sensor_rule_names = extractors.at(context->tech_name);
-            bool matched_any = false;
 
             for (const auto& r_name : sensor_rule_names) 
             {
@@ -91,6 +91,12 @@ WorkerOutput Worker::processSingle(const std::string& filePath)
                     break; 
                 }
             }
+        }
+        if(!sensor_found && !matched_any)
+        {
+            std::lock_guard<std::mutex> lock(callback_mutex);
+            if(callback) callback("Unrecognized string: " + line);
+            has_warnings = true;
         }
     }
 
