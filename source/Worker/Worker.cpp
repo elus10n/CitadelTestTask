@@ -1,1 +1,160 @@
 #include "worker.h"
+
+std::string trim(const std::string& d_str) 
+{
+    int first = d_str.find_first_not_of(" \r\n\t");
+    if (std::string::npos == first) return "";
+    int last = d_str.find_last_not_of(" \r\n\t");
+    return d_str.substr(first, (last - first + 1));
+}
+
+WorkerOutput Worker::processFiles(const std::vector<std::string>& filePaths)
+{
+    WorkerOutput final_output;
+    std::vector<std::future<WorkerOutput>> futures;
+
+    for(const auto& path : filePaths)
+    {
+        if(path.empty())
+        {
+            if(callback) callback("Error in worker: empty path to the file!");
+            has_warnings = true;
+            continue;
+        }
+        futures.push_back(std::async(std::launch::async, &Worker::processSingle, this, path));
+    }
+
+    for(auto& future : futures)
+    {
+        WorkerOutput single_output = future.get();
+        for(auto& [sens_name, extr_map] : single_output)
+            for(auto& [rule_name, extr_res] : extr_map)
+            {
+                auto& vec = final_output[sens_name][rule_name];
+                vec.reserve(vec.size() + extr_res.size());
+                vec.insert(vec.end(), std::make_move_iterator(extr_res.begin()), std::make_move_iterator(extr_res.end()));
+            }
+    }
+
+    return final_output;
+}
+
+WorkerOutput Worker::processSingle(const std::string& filePath)
+{
+    WorkerOutput output;
+    const Sensor* context = nullptr;
+
+    std::ifstream stream(filePath);
+    if(!stream.is_open())
+    {
+        std::lock_guard<std::mutex> lock(callback_mutex);
+        if(callback) callback("Error opening file at path: " + filePath);
+        has_warnings = true;
+    }
+
+    std::string line;
+    while(std::getline(stream, line))
+    {
+        if(line.empty()) continue;
+
+        bool sensor_found = false;
+        for (const auto& s : sensors) 
+        {
+            if (line.find(s.view_name + ":") != std::string::npos) 
+            {
+                context = &s;
+                sensor_found = true;
+                break;
+            }
+        }
+        if (sensor_found) continue;
+
+        if (context) 
+        {
+            const auto& sensor_rule_names = extractors.at(context->tech_name);
+            bool matched_any = false;
+
+            for (const auto& r_name : sensor_rule_names) 
+            {
+                const auto& rule = rules.at(r_name);
+                std::smatch match;
+
+                if (std::regex_search(line, match, rule.pattern)) 
+                {
+                    double val = parseNumericValue(match[1].str(), rule);
+                    
+                    if (rule.type == RuleType::SPEED && match.size() > 2) 
+                        val = convertToBits(val, match[2].str());
+
+                    output[context->tech_name][r_name].emplace_back(filePath, val, match[1].str());
+                    matched_any = true;
+                    break; 
+                }
+            }
+        }
+    }
+
+    return output;
+}
+
+double Worker::parseNumericValue(const std::string& repr_val, const Rule& rule)
+{
+    RuleType type = rule.type;
+
+    switch(type)
+    {
+        case RuleType::BOOL :
+        {
+            std::string clean_s = trim(repr_val);
+
+            if(clean_s == rule.false_repr) return 0.0;
+            else if(clean_s == rule.true_repr) return 1.0;
+            else
+            {
+                std::lock_guard<std::mutex> lock(callback_mutex);
+                if(callback) callback("Error in Worker class thread. Unknown state representation: " + clean_s + ". Possible options: " + rule.true_repr + " and " + rule.false_repr + ". The sensor is read as off.");
+                has_warnings = true;
+                return 0.0;
+            }
+            break;
+        }
+        case RuleType::SPEED: case RuleType::VALUE:
+        {
+            try
+            {
+                double value = std::stod(trim(repr_val));
+                return value;
+            }
+            catch(const std::exception& e)
+            {
+                std::lock_guard<std::mutex> lock(callback_mutex);
+                if(callback) callback(std::string("Error in Worker class thread") + e.what() + ". The sensor is read as 0.0");
+                has_warnings = true;
+                return 0.0;
+            }
+            break;
+        }
+        default : //такая ситуация невозможна, т.к. на этапе парсинга JSON мы отбрасываем это правило
+        {
+            std::lock_guard<std::mutex> lock(callback_mutex);
+            if(callback) callback("Error in Worker class thread. Unknown rule type.");
+            has_warnings = true;
+            return 0.0;
+        }
+    }
+}
+
+double Worker::convertToBits(double value, const std::string& unit)
+{
+    if(unit == "Gbit") return value * 1e9;
+    else if(unit == "Mbit") return value * 1e6;
+    else if(unit == "Kbit") return value * 1e3;
+    else if(unit == "bit") return value;
+    else
+    {
+        std::lock_guard<std::mutex> lock(callback_mutex);
+        if(callback) callback("Error in Worker class thread. Unknown speed representation: " + unit + ". The sensor is read as 0.0 bit/s");
+        has_warnings = true;
+        return 0.0;
+    }
+}

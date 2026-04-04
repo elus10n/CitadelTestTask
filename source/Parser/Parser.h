@@ -9,40 +9,9 @@
 #include <fstream>
 #include <unordered_set>
 
-#include "../include/nlohmann/json.hpp"
+#include "../../include/nlohmann/json.hpp"
+#include "../../include/models.h"
 
-struct Sensor
-{
-    std::string tech_name;
-    std::string view_name;
-
-    Sensor(const std::string& tn, const std::string& vn): tech_name(tn), view_name(vn) {}
-};
-
-enum class RuleType
-{
-    BOOL, VALUE, SPEED
-};
-
-inline const std::map<std::string, RuleType> converter
-{
-    {"bool", RuleType::BOOL}, 
-    {"value", RuleType::VALUE}, 
-    {"speed", RuleType::SPEED}
-};
-
-struct Rule
-{
-    std::string name;
-    RuleType type;
-    std::regex pattern;
-    std::string true_repr;
-    std::string false_repr;
-
-    Rule(const std::string& nm, const RuleType rt, const std::string& pt, const std::string& t = "", const std::string& f = ""): name(nm), type(rt), pattern(pt), true_repr(t), false_repr(f) {} 
-};
-
-using LogCallback = std::function<void(const std::string& error)>;
 
 class ConfigParser
 {
