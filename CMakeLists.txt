@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(googletest)
 add_library(core_lib 
     source/parser/parser.cpp 
     source/worker/worker.cpp
+    source/aggregator/aggregator.cpp
 )
 
 # Указываем пути к хедерам. 
@@ -26,6 +27,7 @@ target_include_directories(core_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/source/parser
     ${CMAKE_CURRENT_SOURCE_DIR}/source/worker
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/aggregator
 )
 
 # Потоки нужны для std::async и std::future в Worker
@@ -42,7 +44,12 @@ target_link_libraries(parser_tests PRIVATE core_lib gtest_main)
 add_executable(worker_tests test/workerTest.cpp)
 target_link_libraries(worker_tests PRIVATE core_lib gtest_main)
 
+# Тесты для агрегатора
+add_executable(aggregator_tests test/aggregatorTest.cpp)
+target_link_libraries(aggregator_tests PRIVATE core_lib gtest_main)
+
 # Интеграция с GoogleTest (позволяет запускать тесты через интерфейс IDE)
 include(GoogleTest)
 gtest_discover_tests(parser_tests)
 gtest_discover_tests(worker_tests)
+gtest_discover_tests(aggregator_tests)

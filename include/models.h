@@ -37,6 +37,7 @@ struct ExtractionResult
     double value;
     std::string repr_value;
 
+    ExtractionResult() = default;
     ExtractionResult(const std::string& fn, const double val, const std::string& vv): filename(fn), value(val), repr_value(vv) {}
 };
 
@@ -45,6 +46,7 @@ struct AggregationResult
     ExtractionResult max;
     ExtractionResult min;
 
+    AggregationResult() = default;
     AggregationResult(const ExtractionResult& mx, const ExtractionResult& mn): max(mx), min(mn) {}
 };
 
