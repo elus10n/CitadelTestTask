@@ -34,9 +34,9 @@ class ConfigParser
 
     void SetConfig(const std::string& path);
 
-    const std::vector<Sensor>& getSensors() const {return sensors;}
-    const std::map<std::string, Rule>& getRules() const {return rules;}
-    const std::map<std::string, std::vector<std::string>>& getExtractors() const {return extractors;}
+    std::vector<Sensor>& getSensors() {return sensors;}
+    std::map<std::string, Rule>& getRules() {return rules;}
+    std::map<std::string, std::vector<std::string>>& getExtractors() {return extractors;}
 
     void setCallback(LogCallback cb) {callback = cb;}
 

@@ -9,10 +9,7 @@ namespace Logger
 {
     LogCallback getCallback()
     {
-        auto callback = [](const std::string& error)
-        {
-            std::cerr << error << std::endl;
-        };
+        auto callback = [](const std::string& error) {std::cerr << error << std::endl;};
         return callback;
     }
 }
