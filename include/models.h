@@ -40,6 +40,14 @@ struct ExtractionResult
     ExtractionResult(const std::string& fn, const double val, const std::string& vv): filename(fn), value(val), repr_value(vv) {}
 };
 
+struct AggregationResult
+{
+    ExtractionResult max;
+    ExtractionResult min;
+
+    AggregationResult(const ExtractionResult& mx, const ExtractionResult& mn): max(mx), min(mn) {}
+};
+
 inline const std::map<std::string, RuleType> converter
 {
     {"bool", RuleType::BOOL}, 
@@ -48,6 +56,8 @@ inline const std::map<std::string, RuleType> converter
 };
 
 using LogCallback = std::function<void(const std::string& error)>;
-using WorkerOutput = std::map<std::string, std::map<std::string, std::vector<ExtractionResult>>>; //мап по имени сенсора в котором хранится мап по имени правила с записями ExtrRes :)))
+
+using WorkerOutput = std::map<std::string, std::map<std::string, std::vector<ExtractionResult>>>;//мап по имени сенсора в котором хранится мап по имени правила с записями :(
+using AggregatorOutput = std::map<std::string, std::map<std::string, AggregationResult>>;//мап по имени сеносра в котором хранится мап по имени правила с аггрегированной статистикой
 
 #endif
