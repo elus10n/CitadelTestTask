@@ -39,16 +39,16 @@ WorkerOutput Worker::processFiles(const std::vector<std::string>& filePaths)
     return final_output;
 }
 
-WorkerOutput Worker::processSingle(const std::string& filePath)
+WorkerOutput Worker::processSingle(const std::string& file_path)
 {
     WorkerOutput output;
     const Sensor* context = nullptr;
 
-    std::ifstream stream(filePath);
+    std::ifstream stream(file_path);
     if(!stream.is_open())
     {
         std::lock_guard<std::mutex> lock(callback_mutex);
-        if(callback) callback("Error opening file at path: " + filePath);
+        if(callback) callback("Error opening file at path: " + file_path);
         has_warnings = true;
     }
 
@@ -86,7 +86,7 @@ WorkerOutput Worker::processSingle(const std::string& filePath)
                     if (rule.type == RuleType::SPEED && match.size() > 2) 
                         val = convertToBits(val, match[2].str());
 
-                    output[context->tech_name][r_name].emplace_back(filePath, val, match[1].str());
+                    output[context->tech_name][r_name].emplace_back(file_path, val, match[1].str());
                     matched_any = true;
                     break; 
                 }

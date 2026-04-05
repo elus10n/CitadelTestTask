@@ -24,10 +24,10 @@ class Worker
 
     std::mutex callback_mutex;
 
-    WorkerOutput processSingle(const std::string& filePath);
+    WorkerOutput processSingle(const std::string& file_path);
 
-    double parseNumericValue(const std::string& repr_val, const Rule& rule);//слева строковое представление величины, справа правило, оттуда узнаем инф-ю об интерпретации
-    double convertToBits(double value, const std::string& unit);//слева число, справа единица измерения
+    double parseNumericValue(const std::string& repr_val, const Rule& rule);
+    double convertToBits(double value, const std::string& unit);
 
     public: 
 
