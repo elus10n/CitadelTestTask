@@ -55,6 +55,9 @@ WorkerOutput Worker::processSingle(const std::string& file_path)
     std::string line;
     while(std::getline(stream, line))
     {
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
         if(line.empty() || line.find("//") == 0) continue;//пропускаем пустые строки и строки с комменатриями, чтобы не нагружать логгер
 
         bool sensor_found = false;
@@ -86,7 +89,8 @@ WorkerOutput Worker::processSingle(const std::string& file_path)
                     if (rule.type == RuleType::SPEED && match.size() > 2) 
                         val = convertToBits(val, match[2].str());
 
-                    output[context->tech_name][r_name].emplace_back(file_path, val, match[1].str());
+                    std::string repr_value = (rule.type == RuleType::SPEED && match.size() > 2) ? (match[1].str() + " " + match[2].str()) : match[1].str();
+                    output[context->tech_name][r_name].emplace_back(file_path, val, repr_value);
                     matched_any = true;
                     break; 
                 }
@@ -128,7 +132,11 @@ double Worker::parseNumericValue(const std::string& repr_val, const Rule& rule)
         {
             try
             {
-                double value = std::stod(trim(repr_val));
+                std::stringstream ss;
+                ss.imbue(std::locale::classic()); 
+                ss << trim(repr_val);
+                double value = 0.0;
+                ss >> value;
                 return value;
             }
             catch(const std::exception& e)

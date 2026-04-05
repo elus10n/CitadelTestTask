@@ -7,7 +7,7 @@
 
 namespace Logger
 {
-    LogCallback getCallback(std::ostream& stream)
+    inline LogCallback getCallback(std::ostream& stream)
     {
         auto callback = [&stream](const std::string& error) {stream << error << std::endl;};
         return callback;

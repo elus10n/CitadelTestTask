@@ -54,6 +54,7 @@ void Orchestrator::printResult(const AggregatorOutput& data, std::ofstream& stre
 {
     for(const auto& [sensor, sensor_data] : data)
     {
+        stream << sensor << ":" << std::endl;
         printSensor(sensor_data, stream);
         stream << std::endl;
     }
