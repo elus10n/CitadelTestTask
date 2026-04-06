@@ -35,3 +35,4 @@ AggregationResult Aggregator::aggregateRule(const std::vector<ExtractionResult>&
 
     return {*max_it, *min_it};
 }
+
