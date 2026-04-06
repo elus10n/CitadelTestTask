@@ -10,4 +10,4 @@ RUN mkdir build && cd build && \
     cmake .. && \
     cmake --build .
 
-CMD cd build && ./unit_tests && ./main_app
+CMD cd build && ./unit_tests && ./main_app && cat example/report.txt
