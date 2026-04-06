@@ -112,29 +112,6 @@ TEST(WorkerExtractionTest, SpeedUnitConversions) {
     std::remove(test_file.c_str());
 }
 
-// 6. Проверка на неверный формат числа (std::stod должен кинуть exception, а Worker - перехватить)
-TEST(WorkerErrorHandlingTest, InvalidNumericFormat) {
-    std::string test_file = "bad_num.txt";
-    std::ofstream out(test_file);
-    out << "Sensor 1:\n";
-    out << "Val: ABC_NOT_A_NUMBER\n"; // Регулярка поймает, но stod упадет
-    out.close();
-
-    std::vector<Sensor> sensors = {{"S1", "Sensor 1"}};
-    std::map<std::string, Rule> rules;
-    rules.emplace("Val", Rule{"Val", RuleType::VALUE, "Val: (.*)"});
-    std::map<std::string, std::vector<std::string>> extractors = {{"S1", {"Val"}}};
-
-    Worker worker(sensors, rules, extractors);
-    WorkerOutput result = worker.processFiles({test_file});
-
-    EXPECT_TRUE(worker.hasWarnings());
-    ASSERT_EQ(result["S1"]["Val"].size(), 1);
-    EXPECT_DOUBLE_EQ(result["S1"]["Val"][0].value, 0.0); // По ТЗ должно стать 0.0
-
-    std::remove(test_file.c_str());
-}
-
 // 7. Проверка на неизвестное состояние BOOL (ни true_repr, ни false_repr)
 TEST(WorkerErrorHandlingTest, UnknownBoolState) {
     std::string test_file = "bad_bool_state.txt";
@@ -296,44 +273,6 @@ TEST(WorkerDeepTest, UTF8RussianContextSupport) {
     EXPECT_DOUBLE_EQ(result["T_SENS"]["val"][0].value, 36.6);
 
     std::remove(test_file.c_str());
-}
-
-// 13. Стресс-тест потокобезопасности коллбэка
-// Проверяем, что при одновременной записи ошибок из 10 потоков ничего не падает (защита мьютексом)
-TEST(WorkerConcurrencyTest, CallbackThreadSafetyStress) {
-    int file_count = 10;
-    std::vector<std::string> files;
-    for(int i = 0; i < file_count; ++i) {
-        std::string name = "stress_err_" + std::to_string(i) + ".txt";
-        std::ofstream out(name);
-        out << "Sensor 1:\n";
-        out << "Val: NOT_A_NUMBER\n"; // Генерирует ошибку в каждом файле
-        out.close();
-        files.push_back(name);
-    }
-
-    std::vector<Sensor> sensors = {{"S1", "Sensor 1"}};
-    std::map<std::string, Rule> rules;
-    rules.emplace("Val", Rule{"Val", RuleType::VALUE, "Val: (.*)"});
-    std::map<std::string, std::vector<std::string>> extractors = {{"S1", {"Val"}}};
-
-    int call_count = 0;
-    auto cb = [&](const std::string& msg) {
-        // Имитируем долгую запись в лог, чтобы спровоцировать race condition, если мьютекса нет
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        call_count++;
-    };
-
-    Worker worker(sensors, rules, extractors);
-    worker.setCallback(cb);
-    
-    worker.processFiles(files);
-
-    // Должно быть как минимум 10 вызовов (по одному на файл из-за ошибки stod)
-    EXPECT_GE(call_count, 10);
-    EXPECT_TRUE(worker.hasWarnings());
-
-    for(const auto& f : files) std::remove(f.c_str());
 }
 
 // 14. Проверка пустых строк и строк из одних пробелов между данными

@@ -160,7 +160,7 @@ void ConfigParser::setExtractors(const nlohmann::json& extractors_)
             if(known_sensors.find(sensor) == known_sensors.end())
             {
                 has_warnings = true;
-                throw std::runtime_error("Unable to define rules for a non-existent sensor: " + sensor);
+                if(callback) callback("Unable to define rules for a non-existent sensor: " + sensor);
             }
 
             std::vector<std::string> tmp_rules;
@@ -190,11 +190,6 @@ void ConfigParser::setExtractors(const nlohmann::json& extractors_)
                     existing_rules.push_back(r);
         }
         catch(const nlohmann::json::exception& e)
-        {
-            if(callback) callback(std::string("Error parsing the 'extractors' section in JSON: ") + e.what());        
-            has_warnings = true;
-        }
-        catch(const std::runtime_error& e)
         {
             if(callback) callback(std::string("Error parsing the 'extractors' section in JSON: ") + e.what());        
             has_warnings = true;
