@@ -1,5 +1,5 @@
-#include "source/orchestrator/orchestrator.h"
-#include "source/logger/logger.h"
+#include "Orchestrator.h"
+#include "Logger.h"
 #include <iostream>
 #include <vector>
 #include <filesystem>
