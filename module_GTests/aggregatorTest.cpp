@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "aggregator.h" 
+#include "Aggregator.h" 
 
 // 1. Проверка поведения при абсолютно пустых входных данных
 TEST(AggregatorSimpleTest, HandleEmptyData) {

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include <cstdio>
-#include "worker.h"
+#include "Worker.h"
 
 // 1. Проверка поведения при пустом списке файлов
 TEST(WorkerSimpleTest, HandleEmptyFilePathsList) {

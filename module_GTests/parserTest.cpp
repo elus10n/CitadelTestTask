@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <fstream>
-#include "parser.h" // Путь подхватится из CMakeLists.txt
+#include "Parser.h" // Путь подхватится из CMakeLists.txt
 
 // 1. Проверка начального состояния (сразу после создания объекта)
 TEST(ParserSimpleTest, InitialState) {
