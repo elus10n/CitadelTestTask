@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.14)
-project(LogParserProject)
+
+project(CitadelTest LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- 1. Подключение GTest ---
+#сторонние библиотеки
+
+add_library(nlohmann_json INTERFACE)
+target_include_directories(nlohmann_json INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -13,45 +19,47 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# --- 2. Создание общей библиотеки логики ---
-# Добавляем и парсер, и воркер в одну библиотеку для удобства линковки
-add_library(core_lib 
-    source/parser/parser.cpp 
-    source/worker/worker.cpp
+#библиотека с нашим кодом
+
+add_library(ProjectCore STATIC
     source/aggregator/aggregator.cpp
     source/orchestrator/orchestrator.cpp
+    source/parser/parser.cpp
+    source/worker/worker.cpp
 )
 
-# Указываем пути к хедерам. 
-# Интерфейсные пути (PUBLIC) позволят тестам автоматически "видеть" эти папки.
-target_include_directories(core_lib PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/parser
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/worker
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/aggregator
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/orchestrator
+target_include_directories(ProjectCore PUBLIC 
+    source/aggregator
+    source/logger
+    source/orchestrator
+    source/parser
+    source/worker
+    include
 )
 
-# Потоки нужны для std::async и std::future в Worker
-find_package(Threads REQUIRED)
-target_link_libraries(core_lib PUBLIC Threads::Threads)
+target_link_libraries(ProjectCore PUBLIC nlohmann_json::nlohmann_json)
 
-# --- 3. Тесты ---
+#исполняемые файлы
 
-# Тесты для парсера
-add_executable(parser_tests module_GTests/parserTest.cpp)
-target_link_libraries(parser_tests PRIVATE core_lib gtest_main)
+add_executable(main_app main.cpp)
+target_link_libraries(main_app PRIVATE ProjectCore)
 
-# Тесты для воркера
-add_executable(worker_tests module_GTests/workerTest.cpp)
-target_link_libraries(worker_tests PRIVATE core_lib gtest_main)
-
-# Тесты для агрегатора
-add_executable(aggregator_tests module_GTests/aggregatorTest.cpp)
-target_link_libraries(aggregator_tests PRIVATE core_lib gtest_main)
-
-# Интеграция с GoogleTest (позволяет запускать тесты через интерфейс IDE)
+enable_testing()
 include(GoogleTest)
-gtest_discover_tests(parser_tests)
-gtest_discover_tests(worker_tests)
-gtest_discover_tests(aggregator_tests)
+
+add_executable(unit_tests 
+    module_GTests/aggregatorTest.cpp
+    module_GTests/parserTest.cpp
+    module_GTests/workerTest.cpp
+)
+
+target_link_libraries(unit_tests PRIVATE 
+    ProjectCore 
+    GTest::gtest_main
+)
+
+gtest_discover_tests(unit_tests)
+
+#копирование примера
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/example/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/example)
