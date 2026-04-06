@@ -52,6 +52,7 @@ void Orchestrator::launchParser(const std::string& config_path, const std::vecto
 
 void Orchestrator::printResult(const AggregatorOutput& data, std::ofstream& stream)
 {
+    stream << std::endl;
     for(const auto& [sensor, sensor_data] : data)
     {
         stream << sensor << ":" << std::endl;
@@ -63,5 +64,5 @@ void Orchestrator::printResult(const AggregatorOutput& data, std::ofstream& stre
 void Orchestrator::printSensor(const std::map<std::string, AggregationResult>& sensor_data, std::ofstream& stream)
 {
     for(const auto& [rule, rule_data] : sensor_data)
-        stream << rule << ": max=" << rule_data.max.repr_value << "(" << rule_data.max.filename << "), min="<<rule_data.min.repr_value<<"("<<rule_data.min.filename<< ")" << std::endl;
+        stream << rule << ": max = " << rule_data.max.repr_value << "(" << rule_data.max.filename << "), min = "<<rule_data.min.repr_value<<"("<<rule_data.min.filename<< ")" << std::endl;
 }

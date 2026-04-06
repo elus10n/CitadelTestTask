@@ -89,7 +89,7 @@ WorkerOutput Worker::processSingle(const std::string& file_path)
                     if (rule.type == RuleType::SPEED && match.size() > 2) 
                         val = convertToBits(val, match[2].str());
 
-                    std::string repr_value = (rule.type == RuleType::SPEED && match.size() > 2) ? (match[1].str() + " " + match[2].str()) : match[1].str();
+                    std::string repr_value = (rule.type == RuleType::SPEED && match.size() > 2) ? (match[1].str() + " " + match[2].str() + "/s") : match[1].str();
                     output[context->tech_name][r_name].emplace_back(file_path, val, repr_value);
                     matched_any = true;
                     break; 
