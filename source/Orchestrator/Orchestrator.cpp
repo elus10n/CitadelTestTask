@@ -1,4 +1,4 @@
-#include "orchestrator.h"
+#include "Orchestrator.h"
 
 //так написано, что парсер и воркер сами проверяют необходимые им пути, нам надо проверить только путь к отчетам
 void Orchestrator::launchParser(const std::string& config_path, const std::vector<std::string>& file_paths, const std::string& report_path)
