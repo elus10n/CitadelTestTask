@@ -1,4 +1,4 @@
-#include "aggregator.h"
+#include "Aggregator.h"
 
 AggregatorOutput Aggregator::aggregate(const WorkerOutput& data)
 {

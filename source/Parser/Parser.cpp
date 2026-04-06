@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "Parser.h"
 
 void ConfigParser::SetConfig(const std::string& path)
 {

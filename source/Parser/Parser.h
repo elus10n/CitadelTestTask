@@ -9,8 +9,8 @@
 #include <fstream>
 #include <unordered_set>
 
-#include "../../include/nlohmann/json.hpp"
-#include "../../include/models.h"
+#include "nlohmann/json.hpp"
+#include "models.h"
 
 
 class ConfigParser

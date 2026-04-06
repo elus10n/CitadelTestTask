@@ -8,11 +8,11 @@
 #include <map>
 #include <fstream>
 
-#include "../../include/models.h"
-#include "../parser/parser.h"
-#include "../worker/worker.h"
-#include "../aggregator/aggregator.h"
-#include "../logger/logger.h"
+#include "models.h"
+#include "Parser.h"
+#include "Worker.h"
+#include "Aggregator.h"
+#include "Logger.h"
 
 class Orchestrator
 {

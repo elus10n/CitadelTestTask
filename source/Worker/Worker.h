@@ -11,7 +11,7 @@
 #include <sstream>
 #include <locale>
 
-#include "../../include/models.h"
+#include "models.h"
 
 class Worker
 {

@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../../include/models.h"
+#include "models.h"
 
 namespace Logger
 {

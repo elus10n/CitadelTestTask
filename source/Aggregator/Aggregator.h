@@ -1,7 +1,7 @@
 #ifndef AGGREGATOR_H
 #define AGGREGATOR_H
 
-#include "../../include/models.h"
+#include "models.h"
 
 class Aggregator
 {
