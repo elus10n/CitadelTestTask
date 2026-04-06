@@ -172,3 +172,4 @@ double Worker::convertToBits(double value, const std::string& unit)
         return 0.0;
     }
 }
+

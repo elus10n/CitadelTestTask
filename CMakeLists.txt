@@ -22,10 +22,10 @@ FetchContent_MakeAvailable(googletest)
 #библиотека с нашим кодом
 
 add_library(ProjectCore STATIC
-    source/Aggregator/aggregator.cpp
-    source/Orchestrator/orchestrator.cpp
-    source/Parser/parser.cpp
-    source/Worker/worker.cpp
+    source/Aggregator/Aggregator.cpp
+    source/Orchestrator/Orchestrator.cpp
+    source/Parser/Parser.cpp
+    source/Worker/Worker.cpp
 )
 
 target_include_directories(ProjectCore PUBLIC 
