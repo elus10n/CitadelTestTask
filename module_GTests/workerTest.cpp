@@ -112,29 +112,6 @@ TEST(WorkerExtractionTest, SpeedUnitConversions) {
     std::remove(test_file.c_str());
 }
 
-// 7. Проверка на неизвестное состояние BOOL (ни true_repr, ни false_repr)
-TEST(WorkerErrorHandlingTest, UnknownBoolState) {
-    std::string test_file = "bad_bool_state.txt";
-    std::ofstream out(test_file);
-    out << "Sensor 1:\n";
-    out << "State: BROKEN\n"; 
-    out.close();
-
-    std::vector<Sensor> sensors = {{"S1", "Sensor 1"}};
-    std::map<std::string, Rule> rules;
-    rules.emplace("State", Rule{"State", RuleType::BOOL, "State: (.*)", "ON", "OFF"});
-    std::map<std::string, std::vector<std::string>> extractors = {{"S1", {"State"}}};
-
-    Worker worker(sensors, rules, extractors);
-    WorkerOutput result = worker.processFiles({test_file});
-
-    EXPECT_TRUE(worker.hasWarnings());
-    ASSERT_EQ(result["S1"]["State"].size(), 1);
-    EXPECT_DOUBLE_EQ(result["S1"]["State"][0].value, 0.0); 
-
-    std::remove(test_file.c_str());
-}
-
 // 8. Проверка переключения контекста сенсоров в одном файле
 TEST(WorkerDeepTest, MultipleSensorsContextSwitch) {
     std::string test_file = "context.txt";

@@ -84,12 +84,30 @@ WorkerOutput Worker::processSingle(const std::string& file_path)
 
                 if (std::regex_search(line, match, rule.pattern)) 
                 {
-                    double val = parseNumericValue(match[1].str(), rule);
-                    
-                    if (rule.type == RuleType::SPEED && match.size() > 2) 
-                        val = convertToBits(val, match[2].str());
+                    std::string clean_match1 = trim(match[1].str());
+                    std::string clean_match2 = (match.size() > 2) ? trim(match[2].str()) : "";
 
-                    std::string repr_value = (rule.type == RuleType::SPEED && match.size() > 2) ? (match[1].str() + " " + match[2].str() + "/s") : match[1].str();
+                    if(rule.type == RuleType::BOOL && clean_match1 != rule.false_repr && clean_match1 != rule.true_repr)
+                    {
+                        std::lock_guard<std::mutex> lock(callback_mutex);
+                        if(callback) callback("Error in Worker class thread. Unknown state representation: " + clean_match1 + ". Possible options: " + rule.true_repr + " and " + rule.false_repr + ".");
+                        has_warnings = true;
+                        continue;
+                    }
+                    else if(rule.type == RuleType::SPEED && clean_match2 != "bit" && clean_match2 != "Kbit" && clean_match2 != "Mbit" && clean_match2 != "Gbit")
+                    {
+                        std::lock_guard<std::mutex> lock(callback_mutex);
+                        if(callback) callback("Error in Worker class thread. Unknown speed representation: " + clean_match2 + ".");
+                        has_warnings = true;
+                        continue;
+                    }
+
+                    double val = parseNumericValue(clean_match1, rule);
+
+                    if (rule.type == RuleType::SPEED && match.size() > 2) 
+                        val = convertToBits(val, clean_match2);
+
+                    std::string repr_value = (rule.type == RuleType::SPEED && match.size() > 2) ? (clean_match1 + " " + clean_match2 + "/s") : clean_match1;
                     output[context->tech_name][r_name].emplace_back(file_path, val, repr_value);
                     matched_any = true;
                     break; 
@@ -115,17 +133,9 @@ double Worker::parseNumericValue(const std::string& repr_val, const Rule& rule)
     {
         case RuleType::BOOL :
         {
-            std::string clean_s = trim(repr_val);
+            if(repr_val == rule.false_repr) return 0.0;
+            else return 1.0;
 
-            if(clean_s == rule.false_repr) return 0.0;
-            else if(clean_s == rule.true_repr) return 1.0;
-            else
-            {
-                std::lock_guard<std::mutex> lock(callback_mutex);
-                if(callback) callback("Error in Worker class thread. Unknown state representation: " + clean_s + ". Possible options: " + rule.true_repr + " and " + rule.false_repr + ". The sensor is read as off.");
-                has_warnings = true;
-                return 0.0;
-            }
             break;
         }
         case RuleType::SPEED: case RuleType::VALUE:
@@ -144,7 +154,7 @@ double Worker::parseNumericValue(const std::string& repr_val, const Rule& rule)
                 std::lock_guard<std::mutex> lock(callback_mutex);
                 if(callback) callback(std::string("Error in Worker class thread") + e.what() + ". The sensor is read as 0.0");
                 has_warnings = true;
-                return 0.0;
+                return 0;
             }
             break;
         }
@@ -163,13 +173,6 @@ double Worker::convertToBits(double value, const std::string& unit)
     if(unit == "Gbit") return value * 1e9;
     else if(unit == "Mbit") return value * 1e6;
     else if(unit == "Kbit") return value * 1e3;
-    else if(unit == "bit") return value;
-    else
-    {
-        std::lock_guard<std::mutex> lock(callback_mutex);
-        if(callback) callback("Error in Worker class thread. Unknown speed representation: " + unit + ". The sensor is read as 0.0 bit/s");
-        has_warnings = true;
-        return 0.0;
-    }
+    else return value;
 }
 

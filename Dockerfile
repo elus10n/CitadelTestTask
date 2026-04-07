@@ -1,6 +1,10 @@
 FROM gcc:latest
 
-RUN apt-get update && apt-get install -y cmake
+RUN apt-get update && apt-get install -y \
+    cmake \
+    python3 \
+    dos2unix \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/citadel
 
@@ -10,4 +14,6 @@ RUN mkdir build && cd build && \
     cmake .. && \
     cmake --build .
 
-CMD cd build && ./unit_tests && ./main_app && cat example/report.txt
+RUN dos2unix entrypoint.sh && chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]

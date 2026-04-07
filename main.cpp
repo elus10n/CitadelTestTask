@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 
     std::string configPath = (argc > 1) ? argv[1] : "example/example.json";
     std::string dataDir = (argc > 2) ? argv[2] : "example/data/";
-    std::string reportPath = "example/report.txt";
+    std::string reportPath = (argc > 3) ? argv[3] : "example/report.txt";
 
     std::vector<std::string> filePaths;
     try 

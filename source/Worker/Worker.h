@@ -10,6 +10,8 @@
 #include <fstream>
 #include <sstream>
 #include <locale>
+#include <cmath>
+#include <limits>
 
 #include "models.h"
 
